@@ -1,0 +1,17 @@
+[project]
+name = "sorteio"
+version = "0.1.0"
+description = "Roda de sorteio para escolher um nome ao acaso."
+readme = "README.md"
+authors = [
+    { name = "Pedro Vilela", email = "pedro.vilela7@gmail.com" }
+]
+requires-python = ">=3.14"
+dependencies = []
+
+[project.scripts]
+sorteio = "sorteio:main"
+
+[build-system]
+requires = ["uv_build>=0.12.21,<0.13.0"]
+build-backend = "uv_build"

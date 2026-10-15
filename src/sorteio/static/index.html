@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Sorteio</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='14' fill='%23121614' stroke='%23e7c36a' stroke-width='2'/%3E%3Cpath d='M16 16 L16 3 A13 13 0 0 1 27 20 Z' fill='%23ef6f4c'/%3E%3Cpath d='M16 16 L27 20 A13 13 0 0 1 8 26 Z' fill='%232a9d8f'/%3E%3Ccircle cx='16' cy='16' r='3' fill='%23e7c36a'/%3E%3C/svg%3E" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main class="app">
+      <header class="hero">
+        <p class="eyebrow">Roda da sorte</p>
+        <h1>Sorteio</h1>
+        <p class="lede">Coloque um nome por linha e gire a roda.</p>
+      </header>
+
+      <div class="layout">
+        <section class="panel names-panel" aria-labelledby="participants-title">
+          <div class="list-head">
+            <h2 id="participants-title">Nomes</h2>
+            <button type="button" id="clear-btn" hidden>Limpar</button>
+          </div>
+          <div class="editor">
+            <label class="visually-hidden" for="name-input">Nomes, um por linha</label>
+            <textarea
+              id="name-input"
+              rows="16"
+              placeholder="Ana Silva&#10;Bruno Costa&#10;Carla Dias"
+              autocomplete="off"
+              autofocus
+            ></textarea>
+            <p class="entries">entradas: <span id="count">0</span></p>
+          </div>
+          <p class="hint">Um nome por linha. A vírgula faz parte do nome.</p>
+          <p id="form-message" class="form-message" role="status"></p>
+        </section>
+
+        <section class="panel wheel-panel" aria-labelledby="wheel-title">
+          <h2 id="wheel-title" class="visually-hidden">Roda</h2>
+          <div class="wheel-stage">
+            <canvas id="wheel" width="640" height="680" role="img" aria-label="Roda de sorteio vazia"></canvas>
+          </div>
+          <div id="result" class="result" hidden aria-live="polite">
+            <p>O sorteado é</p>
+            <strong id="winner-name"></strong>
+            <p id="decision-note" class="decision-note" hidden></p>
+            <div id="save-box" class="save-box">
+              <button type="button" id="save-btn" class="save-btn">Gravar ganhador</button>
+              <div id="save-confirm" class="save-confirm" hidden>
+                <p id="save-question" class="save-question"></p>
+                <div class="save-confirm-actions">
+                  <button type="button" id="save-confirm-btn" class="save-btn">Confirmar gravação</button>
+                  <button type="button" id="save-cancel-btn">Cancelar</button>
+                </div>
+              </div>
+              <p id="save-feedback" class="save-feedback" role="status" hidden></p>
+            </div>
+            <div id="decision-actions" class="decision-actions">
+              <button type="button" id="keep-btn">Manter na lista</button>
+              <button type="button" id="remove-btn">Remover da lista</button>
+            </div>
+          </div>
+          <button type="button" id="spin-btn" disabled>Sortear</button>
+          <p id="spin-hint" class="hint">Adicione pelo menos dois nomes para sortear.</p>
+        </section>
+      </div>
+
+      <section class="panel history-panel" aria-labelledby="history-title">
+        <div class="list-head">
+          <h2 id="history-title">Ganhadores gravados</h2>
+          <button type="button" id="clear-history-btn" hidden>Limpar</button>
+        </div>
+        <p id="history-message" class="history-message" role="status" hidden></p>
+        <p id="history-empty" class="hint">Nenhum ganhador gravado ainda.</p>
+        <ol id="history-list"></ol>
+      </section>
+    </main>
+    <script src="app.js"></script>
+  </body>
+</html>

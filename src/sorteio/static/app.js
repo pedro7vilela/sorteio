@@ -2,6 +2,7 @@ const MAX_NAMES = 500;
 const MAX_NAME_LENGTH = 120;
 const STORAGE_KEY = "sorteio.nomes";
 const SESSION_KEY = "sorteio.sessao";
+const RECORDS_KEY = "sorteio.ganhadores";
 
 const PALETTE = [
   { bg: "#ef6f4c", fg: "#fff8f4" },
@@ -42,6 +43,7 @@ const historyEmpty = document.querySelector("#history-empty");
 const historyMessage = document.querySelector("#history-message");
 const clearHistoryBtn = document.querySelector("#clear-history-btn");
 const ctx = canvas.getContext("2d");
+let useLocalRecords = false;
 
 const state = {
   names: [],
@@ -346,11 +348,38 @@ function cancelSave() {
   render();
 }
 
+function loadLocalRecords() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(RECORDS_KEY) || "[]");
+    if (!Array.isArray(saved)) return [];
+    return saved.filter((item) => item && typeof item.nome === "string");
+  } catch {
+    return [];
+  }
+}
+
+function saveLocalRecords(records) {
+  localStorage.setItem(RECORDS_KEY, JSON.stringify(records));
+}
+
+function createLocalRecord(nome) {
+  const id = globalThis.crypto?.randomUUID?.().replaceAll("-", "") || `${Date.now()}`;
+  return { id, nome, registrado_em: new Date().toISOString() };
+}
+
 async function confirmSave() {
   if (!state.winner || state.saveStatus === "saving" || state.saveStatus === "saved") return;
   state.saveStatus = "saving";
   state.saveError = "";
   render();
+  if (useLocalRecords) {
+    state.records.unshift(createLocalRecord(state.winner));
+    saveLocalRecords(state.records);
+    state.confirmingSave = false;
+    state.saveStatus = "saved";
+    render();
+    return;
+  }
   try {
     const response = await fetch("/api/ganhadores", {
       method: "POST",
@@ -413,11 +442,17 @@ async function clearHistory() {
   state.clearingHistory = true;
   renderHistory();
   try {
-    const response = await fetch("/api/ganhadores", { method: "DELETE" });
-    const payload = await response.json().catch(() => ({}));
-    if (!response.ok) throw new Error(payload.erro || "Não foi possível limpar os ganhadores.");
-    state.records = [];
-    state.recordsError = "";
+    if (useLocalRecords) {
+      state.records = [];
+      saveLocalRecords(state.records);
+      state.recordsError = "";
+    } else {
+      const response = await fetch("/api/ganhadores", { method: "DELETE" });
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(payload.erro || "Não foi possível limpar os ganhadores.");
+      state.records = [];
+      state.recordsError = "";
+    }
   } catch {
     state.recordsError = "Não foi possível limpar os ganhadores gravados.";
   } finally {
@@ -455,6 +490,12 @@ function formatWhen(iso) {
 }
 
 async function loadRecords() {
+  if (useLocalRecords) {
+    state.records = loadLocalRecords();
+    state.recordsError = "";
+    renderHistory();
+    return;
+  }
   try {
     const response = await fetch("/api/ganhadores");
     const payload = await response.json().catch(() => ({}));
@@ -630,22 +671,36 @@ function spin() {
   requestAnimationFrame(frame);
 }
 
+function remembersNamesLocally() {
+  useLocalRecords = true;
+  state.names = loadNames();
+}
+
 async function adoptSession() {
   try {
     const response = await fetch("/api/sessao");
-    if (!response.ok) throw new Error("sessao");
+    const type = response.headers.get("content-type") || "";
+    if (!response.ok || !type.includes("json")) {
+      remembersNamesLocally();
+      return;
+    }
     const payload = await response.json();
     const current = typeof payload.id === "string" ? payload.id : "";
-    if (!current) throw new Error("sessao");
+    if (!current) {
+      remembersNamesLocally();
+      return;
+    }
+    useLocalRecords = false;
     if (localStorage.getItem(SESSION_KEY) !== current) {
       localStorage.removeItem(STORAGE_KEY);
+      localStorage.removeItem(RECORDS_KEY);
       localStorage.setItem(SESSION_KEY, current);
       state.names = [];
       return;
     }
     state.names = loadNames();
   } catch {
-    state.names = loadNames();
+    remembersNamesLocally();
   }
 }
 
